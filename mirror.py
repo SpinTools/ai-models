@@ -30,6 +30,11 @@ MIRROR_MODELS = [
         "description": "Danceability (VGGish, binary classification)",
     },
     {
+        "filename": "gender-audioset-vggish-1.onnx",
+        "url": "https://essentia.upf.edu/models/classification-heads/gender/gender-audioset-vggish-1.onnx",
+        "description": "Vocal Gender (VGGish, binary male/female)",
+    },
+    {
         "filename": "discogs-maest-30s-pw-1.onnx",
         "url": "https://essentia.upf.edu/models/feature-extractors/maest/discogs-maest-30s-pw-1.onnx",
         "description": "Genre Tagger Pro (MAEST transformer, 400 labels)",
@@ -46,7 +51,7 @@ def download_file(url: str, dest: str, description: str) -> None:
     print(f"  Downloading {description}...")
     print(f"    URL: {url}")
 
-    response = requests.get(url, stream=True, timeout=120)
+    response = requests.get(url, stream=True, timeout=300)
     response.raise_for_status()
 
     total = int(response.headers.get("content-length", 0))
