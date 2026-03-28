@@ -1,0 +1,170 @@
+- slug: discogs-effnet-bs64
+  name: Genre Tagger
+  description: "Listens to your tracks and tags the genre automatically. Knows over 400 styles \u2014 from Deep House to Boom Bap, Trap, Drum & Bass, and more."
+  version: "1.0.0"
+  category: genre
+  filename: discogs-effnet-bsdynamic-1.onnx
+  source: essentia-mirror
+  outputConfig:
+    field: genre
+    appendMode: false
+  preprocessingConfig:
+    sampleRate: 16000
+    channels: 1
+    durationSeconds: 30
+    transform: mel-spectrogram
+    nMels: 96
+    nFft: 2048
+    hopLength: 512
+    fMin: 0
+    fMax: 8000
+
+- slug: arousal-regression-audioset-vggish
+  name: Energy Level
+  description: "Scores each track from low to high energy. Sort your library from chill warm-ups to peak-time bangers and plan your set flow."
+  version: "1.0.0"
+  category: energy
+  filename: emomusic-audioset-vggish-2.onnx
+  source: essentia-mirror
+  outputConfig:
+    field: comment
+    commentPrefix: "Energy: "
+    appendMode: false
+  preprocessingConfig:
+    sampleRate: 16000
+    channels: 1
+    durationSeconds: 30
+    transform: mel-spectrogram
+    nMels: 96
+    nFft: 2048
+    hopLength: 512
+    fMin: 0
+    fMax: 8000
+
+- slug: valence-regression-audioset-vggish
+  name: Mood
+  description: "Tags each track as dark and moody or bright and uplifting. Use it to set the vibe and build an emotional arc across your set."
+  version: "1.0.0"
+  category: mood
+  filename: emomusic-audioset-vggish-1.onnx
+  source: essentia-mirror
+  outputConfig:
+    field: comment
+    commentPrefix: "Mood: "
+    appendMode: false
+  preprocessingConfig:
+    sampleRate: 16000
+    channels: 1
+    durationSeconds: 30
+    transform: mel-spectrogram
+    nMels: 96
+    nFft: 2048
+    hopLength: 512
+    fMin: 0
+    fMax: 8000
+
+- slug: danceability-audioset-vggish
+  name: Danceability
+  description: "Rates how danceable each track is based on its groove and rhythm. Quickly find the floor-fillers in your library."
+  version: "1.0.0"
+  category: danceability
+  filename: danceability-audioset-vggish-1.onnx
+  source: essentia-mirror
+  outputConfig:
+    field: comment
+    commentPrefix: "Danceability: "
+    appendMode: false
+  preprocessingConfig:
+    sampleRate: 16000
+    channels: 1
+    durationSeconds: 30
+    transform: mel-spectrogram
+    nMels: 96
+    nFft: 2048
+    hopLength: 512
+    fMin: 0
+    fMax: 8000
+
+- slug: tempocnn-deeptemp-k16
+  name: BPM Detector
+  description: "Finds the BPM of any track. Works well with tricky rhythms like breakbeats and syncopated patterns that other BPM tools get wrong."
+  version: "1.0.0"
+  category: bpm
+  filename: deeptemp-k16-3.onnx
+  source: essentia-convert-tf
+  outputConfig:
+    field: bpm
+    appendMode: false
+  preprocessingConfig:
+    sampleRate: 11025
+    channels: 1
+    durationSeconds: 30
+    transform: mel-spectrogram
+    nMels: 40
+    nFft: 1024
+    hopLength: 512
+    fMin: 30
+    fMax: 5500
+
+- slug: musicalkeycnn-v1
+  name: Key Finder
+  description: "Detects the musical key of your tracks so you can mix in key. Handles complex, layered tracks better than traditional algorithms."
+  version: "1.0.0"
+  category: key
+  filename: keynet.onnx
+  source: pytorch-convert
+  outputConfig:
+    field: key
+    appendMode: false
+  preprocessingConfig:
+    sampleRate: 22050
+    channels: 1
+    durationSeconds: 30
+    transform: cqt
+    nFft: 2048
+    hopLength: 512
+    binsPerOctave: 36
+    fMin: 27.5
+
+- slug: gender-audioset-vggish
+  name: Vocal Gender
+  description: "Tags whether a track has male or female vocals. Helps avoid frequency clashes when mixing two vocal tracks together."
+  version: "1.0.0"
+  category: vocal
+  filename: gender-audioset-vggish-1.onnx
+  source: essentia-mirror
+  outputConfig:
+    field: comment
+    commentPrefix: "Vocal: "
+    appendMode: false
+  preprocessingConfig:
+    sampleRate: 16000
+    channels: 1
+    durationSeconds: 30
+    transform: mel-spectrogram
+    nMels: 96
+    nFft: 2048
+    hopLength: 512
+    fMin: 0
+    fMax: 8000
+
+- slug: discogs-maest-30s-pw-519l
+  name: Genre Tagger Pro
+  description: "Our most detailed genre tagger \u2014 recognizes over 500 styles. Great for progressive, trance, and genres with long build-ups. Bigger download, takes longer to run."
+  version: "1.0.0"
+  category: genre
+  filename: discogs-maest-30s-pw-1.onnx
+  source: essentia-mirror
+  outputConfig:
+    field: genre
+    appendMode: false
+  preprocessingConfig:
+    sampleRate: 16000
+    channels: 1
+    durationSeconds: 30
+    transform: mel-spectrogram
+    nMels: 96
+    nFft: 2048
+    hopLength: 512
+    fMin: 0
+    fMax: 8000
