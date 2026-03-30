@@ -273,10 +273,10 @@ class AIEngine:
         mel_db = np.log10(1.0 + mel * 10000.0)
         mel_db = (mel_db - 2.06755686098554) / 1.268292820667291
 
-        # VGGish takes [1, 96, 96] (96 frames of 96 mel bands)
-        mel_t = mel_db.T[:96]
-        if mel_t.shape[0] < 96:
-            mel_t = np.pad(mel_t, ((0, 96 - mel_t.shape[0]), (0, 0)))
+        # VGGish takes [batch, 64, 96] (64 frames of 96 mel bands)
+        mel_t = mel_db.T[:64]
+        if mel_t.shape[0] < 64:
+            mel_t = np.pad(mel_t, ((0, 64 - mel_t.shape[0]), (0, 0)))
         vgg_tensor = mel_t[np.newaxis, :, :].astype(np.float32)
 
         # Run VGGish
