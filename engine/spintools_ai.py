@@ -195,9 +195,16 @@ class AIEngine:
         else:
             raise ValueError(f"Unknown model type: {model_type}")
 
+    def _get_offset(self, audio_path: str) -> float:
+        """Get offset to start at 25% of the track (skip intros)."""
+        dur = librosa.get_duration(path=audio_path)
+        return dur * 0.25 if dur > 40 else 0
+
     def _run_cqt(self, slug: str, audio_path: str, config: dict) -> str:
         """CQT-based models (key detection)."""
-        wav, _ = librosa.load(audio_path, sr=config["sr"], mono=True, duration=config["duration"])
+        offset = self._get_offset(audio_path)
+        wav, _ = librosa.load(audio_path, sr=config["sr"], mono=True,
+                              offset=offset, duration=config["duration"])
         cqt_cfg = config["cqt"]
         cqt = librosa.cqt(wav, sr=config["sr"], **cqt_cfg)
         spec = np.log1p(np.abs(cqt))[:, 0:-2]
@@ -211,7 +218,9 @@ class AIEngine:
 
     def _run_mel(self, slug: str, audio_path: str, config: dict) -> str:
         """Mel-spectrogram-based models (genre, BPM)."""
-        wav, _ = librosa.load(audio_path, sr=config["sr"], mono=True, duration=config["duration"])
+        offset = self._get_offset(audio_path)
+        wav, _ = librosa.load(audio_path, sr=config["sr"], mono=True,
+                              offset=offset, duration=config["duration"])
         mel_cfg = config["mel"]
         mel = librosa.feature.melspectrogram(y=wav, sr=config["sr"], **mel_cfg)
 
@@ -261,8 +270,10 @@ class AIEngine:
         if not self.vggish_session:
             raise ValueError("VGGish extractor not loaded")
 
-        # Compute full mel-spectrogram for 30s of audio
-        wav, _ = librosa.load(audio_path, sr=VGGISH_MEL_CONFIG["sr"], mono=True, duration=30)
+        # Load 30s of audio starting at 25% of the track to skip intros
+        offset = self._get_offset(audio_path)
+        wav, _ = librosa.load(audio_path, sr=VGGISH_MEL_CONFIG["sr"], mono=True,
+                              offset=offset, duration=30)
         mel = librosa.feature.melspectrogram(y=wav, sr=VGGISH_MEL_CONFIG["sr"],
             n_mels=VGGISH_MEL_CONFIG["n_mels"],
             hop_length=VGGISH_MEL_CONFIG["hop_length"],
