@@ -256,11 +256,12 @@ class AIEngine:
         return self._post_process(pred, out, config, slug)
 
     def _run_vggish_head(self, slug: str, audio_path: str, config: dict) -> str:
-        """VGGish feature extractor + classification head."""
+        """VGGish feature extractor + classification head.
+        Processes multiple 64-frame windows across the track and averages outputs."""
         if not self.vggish_session:
             raise ValueError("VGGish extractor not loaded")
 
-        # Compute VGGish mel-spectrogram with Essentia-compatible preprocessing
+        # Compute full mel-spectrogram for 30s of audio
         wav, _ = librosa.load(audio_path, sr=VGGISH_MEL_CONFIG["sr"], mono=True, duration=30)
         mel = librosa.feature.melspectrogram(y=wav, sr=VGGISH_MEL_CONFIG["sr"],
             n_mels=VGGISH_MEL_CONFIG["n_mels"],
@@ -271,28 +272,50 @@ class AIEngine:
         # Essentia log compression + z-normalization
         mel_db = np.log10(1.0 + mel * 10000.0)
         mel_db = (mel_db - 2.06755686098554) / 1.268292820667291
+        mel_t = mel_db.T  # [frames, 96]
 
-        # VGGish takes [batch, 64, 96] (64 frames of 96 mel bands)
-        mel_t = mel_db.T[:64]
-        if mel_t.shape[0] < 64:
-            mel_t = np.pad(mel_t, ((0, 64 - mel_t.shape[0]), (0, 0)))
-        vgg_tensor = mel_t[np.newaxis, :, :].astype(np.float32)
+        # Split into non-overlapping 64-frame windows, process each through VGGish
+        total_frames = mel_t.shape[0]
+        window_size = 64
+        all_outputs = []
 
-        # Run VGGish
-        embeddings = self.vggish_session.run(None, {"melspectrogram": vgg_tensor})[0]
-
-        # Run classification head
         session = self.sessions[slug]
         input_name = session.get_inputs()[0].name
 
-        # Try rank 2 first, fall back to rank 3
-        try:
-            out = session.run(None, {input_name: embeddings})[0]
-        except Exception:
-            emb_3d = embeddings.reshape(1, 1, embeddings.shape[1])
-            out = session.run(None, {input_name: emb_3d})[0]
+        for start in range(0, total_frames - window_size + 1, window_size):
+            window = mel_t[start:start + window_size]
+            vgg_tensor = window[np.newaxis, :, :].astype(np.float32)
 
-        return self._post_process(None, out, config, slug)
+            # VGGish embeddings for this window
+            embeddings = self.vggish_session.run(None, {"melspectrogram": vgg_tensor})[0]
+
+            # Classification head
+            try:
+                out = session.run(None, {input_name: embeddings})[0]
+            except Exception:
+                emb_3d = embeddings.reshape(1, 1, embeddings.shape[1])
+                out = session.run(None, {input_name: emb_3d})[0]
+
+            all_outputs.append(out.flatten())
+
+        if not all_outputs:
+            # Track too short — use whatever we have, padded
+            window = mel_t[:window_size]
+            if window.shape[0] < window_size:
+                window = np.pad(window, ((0, window_size - window.shape[0]), (0, 0)))
+            vgg_tensor = window[np.newaxis, :, :].astype(np.float32)
+            embeddings = self.vggish_session.run(None, {"melspectrogram": vgg_tensor})[0]
+            try:
+                out = session.run(None, {input_name: embeddings})[0]
+            except Exception:
+                emb_3d = embeddings.reshape(1, 1, embeddings.shape[1])
+                out = session.run(None, {input_name: emb_3d})[0]
+            all_outputs.append(out.flatten())
+
+        # Average outputs across all windows
+        avg_out = np.mean(all_outputs, axis=0)
+
+        return self._post_process(None, avg_out, config, slug)
 
     def _post_process(self, pred_idx, raw_out, config: dict, slug: str) -> str:
         """Convert raw model output to formatted string."""
