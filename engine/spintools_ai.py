@@ -74,7 +74,7 @@ MODEL_CONFIGS = {
         "mel": {
             "n_mels": 96,
             "hop_length": 256,
-            "n_fft": 400,
+            "n_fft": 512,
             "fmin": 0,
             "fmax": 8000,
         },
@@ -82,6 +82,7 @@ MODEL_CONFIGS = {
         "target_frames": 1876,
         "output_name": "activations",
         "labels_file": "labels.json",
+        "log_compress": "essentia",  # log10(1 + mel * 10000) + z-norm
     },
     "tempocnn-deeptemp-k16": {
         "type": "mel_classification",
@@ -214,7 +215,15 @@ class AIEngine:
         wav, _ = librosa.load(audio_path, sr=config["sr"], mono=True, duration=config["duration"])
         mel_cfg = config["mel"]
         mel = librosa.feature.melspectrogram(y=wav, sr=config["sr"], **mel_cfg)
-        mel_db = np.log1p(mel)
+
+        # Apply log compression based on model requirements
+        log_mode = config.get("log_compress", "log1p")
+        if log_mode == "essentia":
+            # Essentia TensorflowInputMusiCNN: log10(1 + mel * 10000) then z-normalize
+            mel_db = np.log10(1.0 + mel * 10000.0)
+            mel_db = (mel_db - 2.06755686098554) / 1.268292820667291
+        else:
+            mel_db = np.log1p(mel)
 
         fmt = config.get("tensor_format", "NCHW")
         if fmt == "NTM":
