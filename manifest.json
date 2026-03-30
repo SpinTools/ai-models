@@ -207,8 +207,8 @@
     }
   ],
   "engine": {
-    "version": "5",
-    "releaseTag": "engine-v5",
+    "version": "6",
+    "releaseTag": "engine-v6",
     "binaries": {
       "darwin-arm64": "spintools-ai-darwin-arm64",
       "win32-x64": "spintools-ai-win32-x64.exe",
