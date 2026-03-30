@@ -65,7 +65,7 @@ MODEL_CONFIGS = {
             "fmax": 8000,
         },
         "tensor_format": "NCHW",  # [1, 1, n_mels, n_frames]
-        "labels_file": "discogs-400-labels.json",
+        "labels_file": "labels.json",
     },
     "discogs-maest-30s-pw-519l": {
         "type": "mel_classification",
@@ -81,7 +81,7 @@ MODEL_CONFIGS = {
         "tensor_format": "NTM",  # [1, n_frames, n_mels]
         "target_frames": 1876,
         "output_name": "activations",
-        "labels_file": "discogs-400-labels.json",
+        "labels_file": "labels.json",
     },
     "tempocnn-deeptemp-k16": {
         "type": "mel_classification",
