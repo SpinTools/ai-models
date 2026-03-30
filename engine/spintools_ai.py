@@ -280,9 +280,9 @@ class AIEngine:
             n_fft=VGGISH_MEL_CONFIG["n_fft"],
             fmin=VGGISH_MEL_CONFIG["fmin"],
             fmax=VGGISH_MEL_CONFIG["fmax"])
-        # Essentia log compression + z-normalization
-        mel_db = np.log10(1.0 + mel * 10000.0)
-        mel_db = (mel_db - 2.06755686098554) / 1.268292820667291
+        # VGGish uses simple log1p (NOT Essentia normalization — VGGish was
+        # ported from Google AudioSet which uses log mel, not Essentia's compression)
+        mel_db = np.log1p(mel)
         mel_t = mel_db.T  # [frames, 96]
 
         # Split into non-overlapping 64-frame windows, process each through VGGish
@@ -344,7 +344,10 @@ class AIEngine:
         elif post == "scale_1_9_to_1_10":
             oi = config.get("output_index", 0)
             val = float(flat[oi])
-            scaled = ((val - 1) / (9 - 1)) * (10 - 1) + 1
+            # Emomusic arousal has narrow range (~4.5-5.5).
+            # Use empirical bounds for meaningful 1-10 spread.
+            lo, hi = 4.5, 5.5
+            scaled = ((val - lo) / (hi - lo)) * 9 + 1
             return str(round(max(1, min(10, scaled))))
 
         elif post == "scale_0_1_to_1_10":
@@ -356,8 +359,22 @@ class AIEngine:
         elif post == "mood_label":
             oi = config.get("output_index", 0)
             val = float(flat[oi])
-            idx = round(((val - 1) / (9 - 1)) * 6)
-            idx = max(0, min(len(MOOD_LABELS) - 1, idx))
+            # Emomusic valence has very narrow range (~4.7-5.3 for most music).
+            # Use empirical percentile thresholds for meaningful spread.
+            if val < 4.82:
+                idx = 0  # Dark
+            elif val < 4.91:
+                idx = 1  # Melancholic
+            elif val < 4.97:
+                idx = 2  # Somber
+            elif val < 5.05:
+                idx = 3  # Neutral
+            elif val < 5.10:
+                idx = 4  # Warm
+            elif val < 5.18:
+                idx = 5  # Bright
+            else:
+                idx = 6  # Uplifting
             return MOOD_LABELS[idx]
 
         elif post == "gender_label":
