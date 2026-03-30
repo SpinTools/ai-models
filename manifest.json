@@ -3,34 +3,6 @@
   "releaseTag": "v1",
   "models": [
     {
-      "slug": "discogs-effnet-bs64",
-      "name": "Genre Tagger",
-      "description": "Listens to your tracks and tags the genre automatically. Knows over 400 styles \u2014 from Deep House to Boom Bap, Trap, Drum & Bass, and more.",
-      "version": "1.0.0",
-      "category": "genre",
-      "downloadUrl": "https://github.com/SpinTools/ai-models/releases/download/v1/discogs-effnet-bsdynamic-1.onnx",
-      "fileSize": 18027718,
-      "outputConfig": {
-        "field": "genre",
-        "appendMode": false
-      },
-      "defaultOutputConfig": {
-        "field": "genre",
-        "appendMode": false
-      },
-      "preprocessingConfig": {
-        "sampleRate": 16000,
-        "channels": 1,
-        "durationSeconds": 30,
-        "transform": "mel-spectrogram",
-        "nMels": 96,
-        "nFft": 2048,
-        "hopLength": 512,
-        "fMin": 0,
-        "fMax": 8000
-      }
-    },
-    {
       "slug": "arousal-regression-audioset-vggish",
       "name": "Energy Level",
       "description": "Scores each track from low to high energy. Sort your library from chill warm-ups to peak-time bangers and plan your set flow.",
@@ -207,8 +179,8 @@
     },
     {
       "slug": "discogs-maest-30s-pw-519l",
-      "name": "Genre Tagger Pro",
-      "description": "Our most detailed genre tagger \u2014 recognizes over 500 styles. Great for progressive, trance, and genres with long build-ups. Bigger download, takes longer to run.",
+      "name": "Genre Tagger",
+      "description": "Listens to your tracks and tags the genre automatically. Recognizes 400 Discogs styles including Deep House, Tech House, Drum & Bass, Trap, Boom Bap, Ambient, and more. Outputs a style label like \"Electronic---House\" or \"Hip Hop---Boom Bap\".",
       "version": "1.0.0",
       "category": "genre",
       "downloadUrl": "https://github.com/SpinTools/ai-models/releases/download/v1/discogs-maest-30s-pw-1.onnx",

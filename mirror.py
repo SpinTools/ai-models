@@ -35,6 +35,11 @@ MIRROR_MODELS = [
         "description": "Vocal Gender (VGGish, binary male/female)",
     },
     {
+        "filename": "audioset-vggish-3.onnx",
+        "url": "https://essentia.upf.edu/models/feature-extractors/vggish/audioset-vggish-3.onnx",
+        "description": "VGGish Feature Extractor (shared dependency for classification heads)",
+    },
+    {
         "filename": "discogs-maest-30s-pw-1.onnx",
         "url": "https://essentia.upf.edu/models/feature-extractors/maest/discogs-maest-30s-pw-1.onnx",
         "description": "Genre Tagger Pro (MAEST transformer, 400 labels)",
