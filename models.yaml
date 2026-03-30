@@ -129,10 +129,10 @@
 
 - slug: discogs-maest-30s-pw-519l
   name: Genre Tagger
-  description: "Listens to your tracks and tags the genre automatically. Recognizes 400 Discogs styles including Deep House, Tech House, Drum & Bass, Trap, Boom Bap, Ambient, and more."
-  version: "1.0.0"
+  description: "Listens to your tracks and tags the genre automatically. Recognizes over 500 Discogs styles including Deep House, Tech House, Drum & Bass, Trap, Boom Bap, Amapiano, Dancehall, Afrobeat, and more."
+  version: "2.0.0"
   category: genre
-  filename: discogs-maest-30s-pw-1.onnx
+  filename: discogs-maest-30s-pw-519l-2.onnx
   source: essentia-mirror
   outputConfig:
     field: genre
@@ -143,7 +143,7 @@
     durationSeconds: 30
     transform: mel-spectrogram
     nMels: 96
-    nFft: 2048
-    hopLength: 512
+    nFft: 512
+    hopLength: 256
     fMin: 0
     fMax: 8000

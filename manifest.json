@@ -180,11 +180,11 @@
     {
       "slug": "discogs-maest-30s-pw-519l",
       "name": "Genre Tagger",
-      "description": "Listens to your tracks and tags the genre automatically. Recognizes 400 Discogs styles including Deep House, Tech House, Drum & Bass, Trap, Boom Bap, Ambient, and more. Outputs a style label like \"Electronic---House\" or \"Hip Hop---Boom Bap\".",
-      "version": "1.0.0",
+      "description": "Listens to your tracks and tags the genre automatically. Recognizes over 500 Discogs styles including Deep House, Tech House, Drum & Bass, Trap, Boom Bap, Amapiano, Dancehall, Afrobeat, and more.",
+      "version": "2.0.0",
       "category": "genre",
-      "downloadUrl": "https://github.com/SpinTools/ai-models/releases/download/v1/discogs-maest-30s-pw-1.onnx",
-      "fileSize": 347812344,
+      "downloadUrl": "https://github.com/SpinTools/ai-models/releases/download/v1/discogs-maest-30s-pw-519l-2.onnx",
+      "fileSize": 348052337,
       "outputConfig": {
         "field": "genre",
         "appendMode": false
@@ -199,8 +199,8 @@
         "durationSeconds": 30,
         "transform": "mel-spectrogram",
         "nMels": 96,
-        "nFft": 2048,
-        "hopLength": 512,
+        "nFft": 512,
+        "hopLength": 256,
         "fMin": 0,
         "fMax": 8000
       }

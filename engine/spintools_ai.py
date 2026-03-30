@@ -80,7 +80,6 @@ MODEL_CONFIGS = {
         },
         "tensor_format": "NTM",  # [1, n_frames, n_mels]
         "target_frames": 1876,
-        "output_name": "activations",
         "labels_file": "labels.json",
         "log_compress": "essentia",  # log10(1 + mel * 10000) + z-norm
     },
