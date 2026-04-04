@@ -30,10 +30,14 @@ import json
 # Suppress all warnings (librosa, soundfile, etc.)
 warnings.filterwarnings("ignore")
 os.environ["PYTHONWARNINGS"] = "ignore"
+# Prevent Essentia's SDL dependency from initializing (crashes in PyInstaller)
+os.environ["SDL_VIDEODRIVER"] = "dummy"
+os.environ["SDL_AUDIODRIVER"] = "dummy"
 
 import numpy as np
 import librosa
 import onnxruntime as ort
+import essentia.standard as es
 
 
 # ---------------------------------------------------------------------------
@@ -131,11 +135,12 @@ MOOD_LABELS = [
 
 VGGISH_MEL_CONFIG = {
     "sr": 16000,
-    "n_mels": 96,
-    "hop_length": 512,
-    "n_fft": 2048,
-    "fmin": 0,
-    "fmax": 8000,
+    "n_mels": 64,
+    "hop_length": 160,
+    "n_fft": 512,
+    "win_length": 400,
+    "fmin": 125,
+    "fmax": 7500,
 }
 
 
@@ -266,38 +271,43 @@ class AIEngine:
 
     def _run_vggish_head(self, slug: str, audio_path: str, config: dict) -> str:
         """VGGish feature extractor + classification head.
-        Processes multiple 64-frame windows across the track and averages outputs."""
+        Uses Essentia-compatible VGGish preprocessing: 64 mel bands, 96-frame
+        patches, transposed to [mels, frames] for the ONNX model."""
         if not self.vggish_session:
             raise ValueError("VGGish extractor not loaded")
 
         # Load 30s of audio starting at 25% of the track to skip intros
         offset = self._get_offset(audio_path)
-        wav, _ = librosa.load(audio_path, sr=VGGISH_MEL_CONFIG["sr"], mono=True,
-                              offset=offset, duration=30)
-        mel = librosa.feature.melspectrogram(y=wav, sr=VGGISH_MEL_CONFIG["sr"],
-            n_mels=VGGISH_MEL_CONFIG["n_mels"],
-            hop_length=VGGISH_MEL_CONFIG["hop_length"],
-            n_fft=VGGISH_MEL_CONFIG["n_fft"],
-            fmin=VGGISH_MEL_CONFIG["fmin"],
-            fmax=VGGISH_MEL_CONFIG["fmax"])
-        # VGGish uses simple log1p (NOT Essentia normalization — VGGish was
-        # ported from Google AudioSet which uses log mel, not Essentia's compression)
-        mel_db = np.log1p(mel)
-        mel_t = mel_db.T  # [frames, 96]
+        audio = es.MonoLoader(
+            filename=audio_path, sampleRate=16000, resampleQuality=4
+        )()
+        start_sample = int(len(audio) * 0.25)
+        chunk = audio[start_sample:start_sample + 30 * 16000]
 
-        # Split into non-overlapping 64-frame windows, process each through VGGish
+        # Compute mel spectrogram using Essentia's VGGish preprocessing
+        # (64 mel bands, 400 frame, 160 hop, 125-7500Hz, HTK mel, log)
+        vggish_preprocess = es.TensorflowInputVGGish()
+        mel_frames = []
+        for frame in es.FrameGenerator(
+            chunk, frameSize=400, hopSize=160, startFromZero=True
+        ):
+            mel_frames.append(vggish_preprocess(frame))
+        mel_t = np.array(mel_frames)  # [frames, 64]
+
+        # Split into non-overlapping 96-frame patches (Google VGGish standard).
+        # Transpose each patch to [64_mels, 96_frames] for the ONNX model.
         total_frames = mel_t.shape[0]
-        window_size = 64
+        patch_size = 96
         all_outputs = []
 
         session = self.sessions[slug]
         input_name = session.get_inputs()[0].name
 
-        for start in range(0, total_frames - window_size + 1, window_size):
-            window = mel_t[start:start + window_size]
-            vgg_tensor = window[np.newaxis, :, :].astype(np.float32)
+        for start in range(0, total_frames - patch_size + 1, patch_size):
+            patch = mel_t[start:start + patch_size]  # [96, 64]
+            vgg_tensor = patch.T[np.newaxis, :, :].astype(np.float32)  # [1, 64, 96]
 
-            # VGGish embeddings for this window
+            # VGGish embeddings for this patch
             embeddings = self.vggish_session.run(None, {"melspectrogram": vgg_tensor})[0]
 
             # Classification head
@@ -311,10 +321,10 @@ class AIEngine:
 
         if not all_outputs:
             # Track too short — use whatever we have, padded
-            window = mel_t[:window_size]
-            if window.shape[0] < window_size:
-                window = np.pad(window, ((0, window_size - window.shape[0]), (0, 0)))
-            vgg_tensor = window[np.newaxis, :, :].astype(np.float32)
+            patch = mel_t[:patch_size]
+            if patch.shape[0] < patch_size:
+                patch = np.pad(patch, ((0, patch_size - patch.shape[0]), (0, 0)))
+            vgg_tensor = patch.T[np.newaxis, :, :].astype(np.float32)
             embeddings = self.vggish_session.run(None, {"melspectrogram": vgg_tensor})[0]
             try:
                 out = session.run(None, {input_name: embeddings})[0]
@@ -323,7 +333,7 @@ class AIEngine:
                 out = session.run(None, {input_name: emb_3d})[0]
             all_outputs.append(out.flatten())
 
-        # Average outputs across all windows
+        # Average outputs across all patches
         avg_out = np.mean(all_outputs, axis=0)
 
         return self._post_process(None, avg_out, config, slug)
@@ -344,42 +354,41 @@ class AIEngine:
         elif post == "scale_1_9_to_1_10":
             oi = config.get("output_index", 0)
             val = float(flat[oi])
-            # Emomusic arousal has narrow range (~4.5-5.5).
-            # Use empirical bounds for meaningful 1-10 spread.
-            lo, hi = 4.5, 5.5
+            # Emomusic arousal range with Essentia VGGish preprocessing: ~4.1-4.9
+            lo, hi = 4.1, 4.9
             scaled = ((val - lo) / (hi - lo)) * 9 + 1
             return str(round(max(1, min(10, scaled))))
 
         elif post == "scale_0_1_to_1_10":
             oi = config.get("output_index", 0)
             val = float(flat[oi])
-            scaled = val * 9 + 1
+            # Danceability range with Essentia VGGish preprocessing: ~0.45-0.80
+            lo, hi = 0.45, 0.80
+            scaled = ((val - lo) / (hi - lo)) * 9 + 1
             return str(round(max(1, min(10, scaled))))
 
         elif post == "mood_label":
             oi = config.get("output_index", 0)
             val = float(flat[oi])
-            # Emomusic valence has very narrow range (~4.7-5.3 for most music).
-            # Use empirical percentile thresholds for meaningful spread.
-            if val < 4.82:
+            # Emomusic valence with Essentia VGGish preprocessing: ~4.05-4.40
+            if val < 4.10:
                 idx = 0  # Dark
-            elif val < 4.91:
+            elif val < 4.15:
                 idx = 1  # Melancholic
-            elif val < 4.97:
+            elif val < 4.20:
                 idx = 2  # Somber
-            elif val < 5.05:
+            elif val < 4.25:
                 idx = 3  # Neutral
-            elif val < 5.10:
+            elif val < 4.30:
                 idx = 4  # Warm
-            elif val < 5.18:
+            elif val < 4.36:
                 idx = 5  # Bright
             else:
                 idx = 6  # Uplifting
             return MOOD_LABELS[idx]
 
         elif post == "gender_label":
-            labels = ["female", "male"]
-            return labels[int(np.argmax(flat))]
+            return ",".join(f"{v:.6f}" for v in flat)
 
         else:
             # Classification with labels

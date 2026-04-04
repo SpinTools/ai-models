@@ -106,8 +106,8 @@
     fMin: 27.5
 
 - slug: gender-audioset-vggish
-  name: Vocal Gender
-  description: "Tags whether a track has male or female vocals. Helps avoid frequency clashes when mixing two vocal tracks together."
+  name: Vocal Type
+  description: "Detects whether a track has feminine, masculine, or mixed vocal characteristics. Helps avoid mid-range frequency clashes when mixing two vocal tracks."
   version: "1.0.0"
   category: vocal
   filename: gender-audioset-vggish-1.onnx

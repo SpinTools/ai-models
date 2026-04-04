@@ -149,9 +149,9 @@
     },
     {
       "slug": "gender-audioset-vggish",
-      "name": "Vocal Gender",
-      "description": "Tags whether a track has male or female vocals. Helps avoid frequency clashes when mixing two vocal tracks together.",
-      "version": "1.0.0",
+      "name": "Vocal Type",
+      "description": "Detects whether a track has feminine, masculine, or mixed vocal characteristics. Helps avoid mid-range frequency clashes when mixing two vocal tracks.",
+      "version": "1.1.0",
       "category": "vocal",
       "downloadUrl": "https://github.com/SpinTools/ai-models/releases/download/v1/gender-audioset-vggish-1.onnx",
       "fileSize": 53290,
