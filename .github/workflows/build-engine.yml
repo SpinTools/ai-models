@@ -39,7 +39,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libsndfile1
 
       - name: Install Python dependencies
-        run: pip install -r engine/requirements.txt
+        run: pip install --pre -r engine/requirements.txt
 
       # Essentia bundles libSDL which crashes in headless PyInstaller builds.
       # Replace it with a stub that satisfies the linker without initializing SDL.
