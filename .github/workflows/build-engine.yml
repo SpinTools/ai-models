@@ -6,49 +6,9 @@ on:
     paths:
       - 'engine/**'
   workflow_dispatch:
-    inputs:
-      release_tag:
-        description: 'Release tag to upload assets to (e.g., engine-v1)'
-        required: false
 
 jobs:
-  # Determine the release tag — auto-increment from existing tags or use manual input
-  prepare:
-    runs-on: ubuntu-latest
-    outputs:
-      release_tag: ${{ steps.tag.outputs.tag }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Determine release tag
-        id: tag
-        env:
-          INPUT_TAG: ${{ github.event.inputs.release_tag }}
-        shell: bash
-        run: |
-          if [ -n "$INPUT_TAG" ]; then
-            echo "tag=$INPUT_TAG" >> "$GITHUB_OUTPUT"
-          else
-            # Find latest engine-vN tag and increment
-            LATEST=$(git tag -l 'engine-v*' --sort=-v:refname | head -1)
-            if [ -z "$LATEST" ]; then
-              echo "tag=engine-v1" >> "$GITHUB_OUTPUT"
-            else
-              NUM="${LATEST#engine-v}"
-              NEXT=$((NUM + 1))
-              echo "tag=engine-v${NEXT}" >> "$GITHUB_OUTPUT"
-            fi
-          fi
-
-      - name: Print tag
-        env:
-          TAG: ${{ steps.tag.outputs.tag }}
-        run: 'echo "Release tag: $TAG"'
-
   build:
-    needs: prepare
     strategy:
       matrix:
         include:
@@ -81,44 +41,67 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r engine/requirements.txt
 
+      # Essentia bundles libSDL which crashes in headless PyInstaller builds.
+      # Replace it with a stub that satisfies the linker without initializing SDL.
+      - name: Create SDL stub (macOS)
+        if: matrix.platform == 'darwin'
+        run: |
+          DYLIBS_DIR=$(python -c "import essentia, os; print(os.path.join(os.path.dirname(essentia.__file__), '.dylibs'))")
+          echo "void SDL_Init(void) {} void SDL_Quit(void) {}" > /tmp/sdl_stub.c
+          cc -shared -o "$DYLIBS_DIR/libSDL-1.2.0.dylib" /tmp/sdl_stub.c -install_name @loader_path/libSDL-1.2.0.dylib
+
+      - name: Create SDL stub (Linux)
+        if: matrix.platform == 'linux'
+        run: |
+          LIBS_DIR=$(python -c "import essentia, os; print(os.path.join(os.path.dirname(essentia.__file__), '.libs'))" 2>/dev/null || echo "")
+          if [ -n "$LIBS_DIR" ] && [ -d "$LIBS_DIR" ]; then
+            SDL_FILE=$(find "$LIBS_DIR" -name "libSDL*" -print -quit 2>/dev/null || true)
+            if [ -n "$SDL_FILE" ]; then
+              echo "void SDL_Init(void) {} void SDL_Quit(void) {}" > /tmp/sdl_stub.c
+              gcc -shared -o "$SDL_FILE" /tmp/sdl_stub.c
+            fi
+          fi
+
       - name: Determine binary name
         id: name
         shell: bash
-        env:
-          PLATFORM: ${{ matrix.platform }}
-          ARCH: ${{ matrix.arch }}
         run: |
           EXT=""
           if [ "$PLATFORM" = "win32" ]; then
             EXT=".exe"
           fi
           echo "binary_name=spintools-ai-${PLATFORM}-${ARCH}${EXT}" >> "$GITHUB_OUTPUT"
+        env:
+          PLATFORM: ${{ matrix.platform }}
+          ARCH: ${{ matrix.arch }}
 
       - name: Build with PyInstaller
         shell: bash
-        env:
-          BINARY_NAME: ${{ steps.name.outputs.binary_name }}
         run: |
           cd engine
           pyinstaller \
             --onefile \
             --name "$BINARY_NAME" \
+            --hidden-import essentia \
+            --hidden-import essentia.standard \
             --distpath dist \
             --workpath build \
             --specpath build \
             --clean \
             --noconfirm \
             spintools_ai.py
+        env:
+          BINARY_NAME: ${{ steps.name.outputs.binary_name }}
 
       - name: Test binary starts
         shell: bash
-        env:
-          BINARY_NAME: ${{ steps.name.outputs.binary_name }}
         run: |
           BINARY="engine/dist/$BINARY_NAME"
           chmod +x "$BINARY" 2>/dev/null || true
           echo "QUIT" | "$BINARY" --server || true
           echo "Binary test passed"
+        env:
+          BINARY_NAME: ${{ steps.name.outputs.binary_name }}
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
@@ -127,9 +110,9 @@ jobs:
           path: engine/dist/${{ steps.name.outputs.binary_name }}
 
   release:
-    needs: [prepare, build]
+    needs: build
     runs-on: ubuntu-latest
-    name: Create release (${{ needs.prepare.outputs.release_tag }})
+    name: Upload engine binaries to v1 release
 
     permissions:
       contents: write
@@ -145,23 +128,14 @@ jobs:
       - name: List artifacts
         run: find artifacts -type f
 
-      - name: Create release and upload binaries
+      - name: Upload binaries to v1 release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
         run: |
-          # Create the release (or update if it exists)
-          gh release create "$RELEASE_TAG" \
-            --repo "${{ github.repository }}" \
-            --title "AI Engine $RELEASE_TAG" \
-            --notes "Automated build of the SpinTools AI Engine for all platforms." \
-            --latest \
-            2>/dev/null || true
-
-          # Upload all platform binaries
+          # Upload all platform binaries to the existing v1 release
           for dir in artifacts/*/; do
             for file in "$dir"*; do
               echo "Uploading: $file"
-              gh release upload "$RELEASE_TAG" "$file" --repo "${{ github.repository }}" --clobber
+              gh release upload v1 "$file" --repo "$GITHUB_REPOSITORY" --clobber
             done
           done
