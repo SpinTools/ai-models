@@ -79,11 +79,14 @@ jobs:
         shell: bash
         run: |
           cd engine
+          EXTRA_ARGS=""
+          if python -c "import essentia" 2>/dev/null; then
+            EXTRA_ARGS="--hidden-import essentia --hidden-import essentia.standard"
+          fi
           pyinstaller \
             --onefile \
             --name "$BINARY_NAME" \
-            --hidden-import essentia \
-            --hidden-import essentia.standard \
+            $EXTRA_ARGS \
             --distpath dist \
             --workpath build \
             --specpath build \

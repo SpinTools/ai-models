@@ -37,7 +37,12 @@ os.environ["SDL_AUDIODRIVER"] = "dummy"
 import numpy as np
 import librosa
 import onnxruntime as ort
-import essentia.standard as es
+
+try:
+    import essentia.standard as es
+    HAS_ESSENTIA = True
+except ImportError:
+    HAS_ESSENTIA = False
 
 
 # ---------------------------------------------------------------------------
@@ -278,21 +283,35 @@ class AIEngine:
 
         # Load 30s of audio starting at 25% of the track to skip intros
         offset = self._get_offset(audio_path)
-        audio = es.MonoLoader(
-            filename=audio_path, sampleRate=16000, resampleQuality=4
-        )()
-        start_sample = int(len(audio) * 0.25)
-        chunk = audio[start_sample:start_sample + 30 * 16000]
 
-        # Compute mel spectrogram using Essentia's VGGish preprocessing
-        # (64 mel bands, 400 frame, 160 hop, 125-7500Hz, HTK mel, log)
-        vggish_preprocess = es.TensorflowInputVGGish()
-        mel_frames = []
-        for frame in es.FrameGenerator(
-            chunk, frameSize=400, hopSize=160, startFromZero=True
-        ):
-            mel_frames.append(vggish_preprocess(frame))
-        mel_t = np.array(mel_frames)  # [frames, 64]
+        if HAS_ESSENTIA:
+            # Essentia provides accurate VGGish preprocessing (preferred)
+            audio = es.MonoLoader(
+                filename=audio_path, sampleRate=16000, resampleQuality=4
+            )()
+            start_sample = int(len(audio) * 0.25) if len(audio) / 16000 > 40 else 0
+            chunk = audio[start_sample:start_sample + 30 * 16000]
+
+            vggish_preprocess = es.TensorflowInputVGGish()
+            mel_frames = []
+            for frame in es.FrameGenerator(
+                chunk, frameSize=400, hopSize=160, startFromZero=True
+            ):
+                mel_frames.append(vggish_preprocess(frame))
+            mel_t = np.array(mel_frames)  # [frames, 64]
+        else:
+            # Fallback: librosa approximation (Windows)
+            wav, _ = librosa.load(audio_path, sr=16000, mono=True,
+                                  offset=offset, duration=30)
+            mel = librosa.feature.melspectrogram(
+                y=wav, sr=16000, n_mels=VGGISH_MEL_CONFIG["n_mels"],
+                hop_length=VGGISH_MEL_CONFIG["hop_length"],
+                n_fft=VGGISH_MEL_CONFIG["n_fft"],
+                win_length=VGGISH_MEL_CONFIG["win_length"],
+                fmin=VGGISH_MEL_CONFIG["fmin"],
+                fmax=VGGISH_MEL_CONFIG["fmax"],
+                htk=True, norm=None)
+            mel_t = np.log1p(mel).T  # [frames, 64]
 
         # Split into non-overlapping 96-frame patches (Google VGGish standard).
         # Transpose each patch to [64_mels, 96_frames] for the ONNX model.

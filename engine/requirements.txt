@@ -2,5 +2,5 @@ librosa>=0.10.0
 onnxruntime>=1.17.0
 numpy>=1.24.0
 soundfile>=0.12.0
-essentia
+essentia; sys_platform != "win32"
 pyinstaller>=6.0.0
