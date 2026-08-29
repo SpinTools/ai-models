@@ -204,15 +204,55 @@
         "fMin": 0,
         "fMax": 8000
       }
+    },
+    {
+      "slug": "vocals-best",
+      "name": "Vocal Separator",
+      "description": "Splits a track into a clean vocal and a full instrumental, so you can build acapellas, instrumentals and edits from anything in your library.",
+      "version": "1.0.0",
+      "category": "separation",
+      "modelKind": "separation",
+      "stemCount": 2,
+      "requiresAppleSilicon": true,
+      "artifacts": {
+        "darwin-arm64": {
+          "format": "ckpt",
+          "downloadUrl": "https://github.com/SpinTools/ai-models/releases/download/weights-v1/vocals_mel_band_roformer.ckpt",
+          "fileSize": 913106900,
+          "sha256": "87201f4d31afb5bc79993230fc49446918425574db48c01c405e44f365c7559e"
+        }
+      },
+      "outputConfig": {
+        "field": "stems"
+      },
+      "defaultOutputConfig": {
+        "field": "stems"
+      },
+      "preprocessingConfig": {
+        "sampleRate": 44100,
+        "channels": 2
+      }
     }
   ],
   "engine": {
-    "version": "1",
-    "releaseTag": "v1",
+    "version": "2",
+    "releaseTag": "engine-v2",
     "binaries": {
-      "darwin-arm64": "spintools-ai-darwin-arm64",
-      "win32-x64": "spintools-ai-win32-x64.exe",
-      "linux-x64": "spintools-ai-linux-x64"
+      "darwin-arm64": {
+        "name": "spintools-ai-darwin-arm64",
+        "sha256": "3bb178eaa8026ce064592d6816350718b1d299c6ab64c5ddbc95822d299e9f47",
+        "fileSize": 316404896
+      },
+      "win32-x64": {
+        "name": "spintools-ai-win32-x64.exe",
+        "sha256": "7005198cede33ea3c08d466fa2ddaac49e9bb135cd8a8355a8c54427a1e8d37d",
+        "fileSize": 121975288
+      },
+      "linux-x64": {
+        "name": "spintools-ai-linux-x64",
+        "sha256": "9656b3cf5a0d7fe06114f11826bc89d7b7bbd824e35366a4c4307730002fcb41",
+        "fileSize": 167770136
+      }
     }
   }
 }
