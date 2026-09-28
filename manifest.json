@@ -235,13 +235,13 @@
     }
   ],
   "engine": {
-    "version": "3",
-    "releaseTag": "engine-v3",
+    "version": "4",
+    "releaseTag": "engine-v4",
     "binaries": {
       "darwin-arm64": {
         "name": "spintools-ai-darwin-arm64",
-        "sha256": "169fbea0b0786b48f1bfb22cb5682b581bd7315e2888c5f4299f6be32809c0a6",
-        "fileSize": 315383008
+        "sha256": "2945e8fd850716548c3f32c682c526c6799be9da782b24041a9a1f4638ed2c03",
+        "fileSize": 316473024
       },
       "win32-x64": {
         "name": "spintools-ai-win32-x64.exe",
