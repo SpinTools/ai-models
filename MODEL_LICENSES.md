@@ -50,6 +50,32 @@ Consult each model's upstream project for its terms.
 The `spintools-ai-*` binaries are SpinTools' own analysis engine. They embed
 third-party open-source Python libraries, each under its own licence.
 
+### Native libraries in the macOS arm64 engine (engine-v9 onward)
+
+The macOS arm64 engine's audio analysis uses Essentia, built from source by
+SpinTools with the libraries below linked statically into one extension module.
+Each is built from the unmodified upstream source named in
+[`ENGINE_NOTICES.txt`](ENGINE_NOTICES.txt), which also quotes each licence
+verbatim from that source.
+
+| Library | Version | Licence |
+| --- | --- | --- |
+| Essentia | 2.1-beta6-dev (MTG/essentia `86bdb8e3`) | AGPL-3.0-only |
+| FFmpeg | 7.1.1 (decode-only, no GPL or non-free components) | LGPL-2.1-or-later |
+| TagLib | 1.13.1 | LGPL-2.1 or MPL-1.1 |
+| libsamplerate | 0.2.2 | BSD-2-Clause |
+| libyaml | 0.2.5 | MIT |
+| Chromaprint | 1.5.1 | MIT, with FFmpeg parts under LGPL-2.1 |
+| FFTW | 3.3.10 | GPL-2.0-or-later |
+| Eigen | 3.3.7 (headers) | MPL-2.0 |
+
+The previous macOS engine (engine-v8) carried Essentia as a PyPI wheel bundling
+41 libraries, including `libx264` and `libx265` (GPL-2.0-or-later) and LAME.
+**None of those are in engine-v9.** That is not a claim that the engine is
+LGPL-only: it contains FFTW (GPL-2.0-or-later) and Essentia (AGPL-3.0), as
+engine-v8 did through the same wheel. The Windows and Linux engines are
+unchanged from engine-v4 and are not covered by this table.
+
 They also carry one third-party **data** file, bundled rather than
 downloaded so that a separation never has to reach a host outside this
 repository:
