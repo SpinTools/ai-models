@@ -5,7 +5,8 @@ and remain subject to their original licences. This file records the licence
 for each redistributed file and carries the attribution those licences
 require.
 
-Every mirrored file is **byte-identical to its upstream original**. The
+Every mirrored file, except the fine-tuned beat tracker described under
+"Beat tracking model", is **byte-identical to its upstream original**. The
 `sha256` below is the upstream file's own digest, and it is verified on
 every mirror run — so anyone can confirm that what is served here is exactly
 what the original author published.
@@ -38,6 +39,27 @@ The Mel-Band Roformer *architecture* is separate work again: the reference
 implementation (<https://github.com/lucidrains/BS-RoFormer>, Phil Wang) is
 MIT and ships no weights. An architecture's licence does not carry over to a
 checkpoint trained on it.
+
+## Beat tracking model
+
+### `beatthis-final-ftd-serato-1.onnx`
+
+| | |
+| --- | --- |
+| **Authors** | Francesco Foscarin, Jan Schluter and Gerhard Widmer (Institute of Computational Perception, Johannes Kepler University Linz) |
+| **Licence** | MIT |
+| **Upstream** | <https://github.com/CPJKU/beat_this> (the `final0` checkpoint) |
+| **Paper** | "Beat This! Accurate beat tracking without DBN postprocessing", ISMIR 2024 |
+| **sha256** | `3f0cd8747fa83542437e4f40e9ea47fc6f319053b3069433ec9695f588754167` |
+| **Size** | 82,568,067 bytes |
+
+Unlike the files above, this one is **not** byte-identical to the upstream
+checkpoint. It is the upstream model fine-tuned on beat targets for DJ
+beatgrid alignment and exported to ONNX (static `1 x 1500 x 128` log-mel
+input, opset 17). The upstream code and published weights are MIT-licensed
+and this derivative is redistributed under the same terms. The fine-tuning
+data is not redistributed. The full licence text and attribution ship beside
+the weights as `BEATTHIS-NOTICE.txt` on the `weights-v2` release.
 
 ## Analysis models
 

@@ -232,6 +232,43 @@
         "sampleRate": 44100,
         "channels": 2
       }
+    },
+    {
+      "slug": "beatgrid-neural",
+      "name": "Neural Beatgrid",
+      "description": "Finds the beats of a track with a neural network tuned for DJ beatgrid alignment.",
+      "version": "1.0.0",
+      "category": "beatgrid",
+      "modelKind": "beatgrid",
+      "requiresAppleSilicon": true,
+      "minMacOs": "14.0",
+      "minMemoryGB": 8,
+      "artifacts": {
+        "darwin-arm64": {
+          "format": "onnx",
+          "downloadUrl": "https://github.com/SpinTools/ai-models/releases/download/weights-v2/beatthis-final-ftd-serato-1.onnx",
+          "fileSize": 82568067,
+          "sha256": "3f0cd8747fa83542437e4f40e9ea47fc6f319053b3069433ec9695f588754167"
+        }
+      },
+      "outputConfig": {
+        "field": "beatgrid"
+      },
+      "defaultOutputConfig": {
+        "field": "beatgrid"
+      },
+      "preprocessingConfig": {
+        "sampleRate": 22050,
+        "channels": 1,
+        "transform": "log-mel-spectrogram",
+        "nMels": 128,
+        "nFft": 1024,
+        "hopLength": 441,
+        "fMin": 30,
+        "fMax": 11000,
+        "chunkFrames": 1500,
+        "chunkBorderFrames": 6
+      }
     }
   ],
   "engine": {
