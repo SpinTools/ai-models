@@ -65,7 +65,7 @@ verbatim from that source.
 | TagLib | 1.13.1 | LGPL-2.1 or MPL-1.1 |
 | libsamplerate | 0.2.2 | BSD-2-Clause |
 | libyaml | 0.2.5 | MIT |
-| Chromaprint | 1.5.1 | MIT, with FFmpeg parts under LGPL-2.1 |
+| Chromaprint | 1.5.1 | LGPL-2.1 (as a whole, per its own `LICENSE.md`; its own code is MIT, with FFmpeg parts under LGPL-2.1) |
 | FFTW | 3.3.10 | GPL-2.0-or-later |
 | Eigen | 3.3.7 (headers) | MPL-2.0 |
 
