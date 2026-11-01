@@ -4,8 +4,9 @@ SpinTools AI engine: third-party native libraries (macOS arm64, engine-v9 onward
 The macOS arm64 engine's audio analysis uses Essentia, which SpinTools builds
 from source with the libraries below linked statically into one extension
 module. Each library is built from the UNMODIFIED upstream source tarball named
-here (no patches are applied); the sha256 is the digest of that tarball, and the
-licence text that follows is quoted verbatim from it.
+here (no patches are applied to them); the sha256 is the digest of that tarball,
+and the licence text that follows is quoted verbatim from it. Essentia itself
+carries the SpinTools patches listed under it, published in full below.
 
 FFmpeg is configured decode-only, without --enable-gpl and without any GPL or
 non-free component, and its configure step reports the licence as
@@ -25,7 +26,10 @@ their own licences, as before.
 Essentia
   version : 2.1-beta6-dev (MTG/essentia commit 86bdb8e3244bbaa3cf1fb600495d330b6e5530eb)
   licence : AGPL-3.0-only (Music Technology Group, Universitat Pompeu Fabra)
-  source  : https://github.com/MTG/essentia  (the commit above, unmodified)
+  source  : https://github.com/MTG/essentia  (the commit above, MODIFIED by
+            the patch(es) below, applied in this order; their full text is
+            under "MODIFICATIONS TO ESSENTIA" in this file)
+            - 0001-audioloader-unref-skipped-packets.patch  (sha256 f0c382d7f6291f69be523afeaa5f6b3df942d77a0cfe66fdc9eefca20438df8e)
   site    : https://essentia.upf.edu
 
 FFmpeg
@@ -69,6 +73,32 @@ Eigen
   licence : MPL-2.0 (headers; some files BSD/LGPL, see COPYING.README)
   source  : https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.gz
   sha256  : d56fbad95abf993f8af608484729e3d87ef611dd85b3380a8bad1d5cbc373a57
+
+
+==============================================================================
+MODIFICATIONS TO ESSENTIA (verbatim patches, applied with `git apply`)
+==============================================================================
+
+------------------------------------------------------------------------------
+0001-audioloader-unref-skipped-packets.patch
+------------------------------------------------------------------------------
+--- a/src/algorithms/io/audioloader.cpp
++++ b/src/algorithms/io/audioloader.cpp
+@@ -250,7 +250,13 @@
+             }
+             return FINISHED;
+         }
+-    } while (_packet.stream_index != _streamIdx);
++        if (_packet.stream_index == _streamIdx) break;
++        // A packet of another stream (the video track of an .mp4/.m4v, a
++        // cover-art stream): drop it. Without this unref every skipped
++        // packet's buffer leaked -- about the size of the file's video
++        // stream per decode (SpinTools engine-v11, ai-models-src#19).
++        av_packet_unref(&_packet);
++    } while (true);
+ 
+     // compute md5 first
+     if (_computeMD5) {
 
 
 ==============================================================================
