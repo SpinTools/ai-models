@@ -272,14 +272,14 @@
     }
   ],
   "engine": {
-    "version": "11",
-    "releaseTag": "engine-v11",
+    "version": "12",
+    "releaseTag": "engine-v12",
     "minMacOs": "14.0",
     "binaries": {
       "darwin-arm64": {
         "name": "spintools-ai-darwin-arm64",
-        "sha256": "2e31c943c00f9d4cd7fd11cbbe3e9b4a2b5e1122f1cedcd3b8d6305ac0ee036a",
-        "fileSize": 310116624
+        "sha256": "828466dbf4e4c6db478a38b706dec9e8a69dbd7e641e8cb311e38b776b42dba1",
+        "fileSize": 310119632
       },
       "win32-x64": {
         "name": "spintools-ai-win32-x64.exe",
@@ -296,12 +296,13 @@
       "darwin-arm64": {
         "name": "spintools-ai-darwin-arm64-onedir.zip",
         "format": "zip",
-        "sha256": "cb99250d1a99f5442ac2684ac76255c1fa27c0f1529605763952c9b7ad8e81a7",
-        "fileSize": 313805851,
-        "unpackedSize": 1014686577,
+        "sha256": "e6dad9e9f95c7f44a8e0eac8f0a269030b5a87c0b380892701883daba36684d6",
+        "fileSize": 313808717,
+        "unpackedSize": 1014691073,
         "entry": "spintools-ai-darwin-arm64/spintools-ai-darwin-arm64",
         "protocol": [
-          "prefetch"
+          "prefetch",
+          "job-overlap"
         ]
       }
     }
