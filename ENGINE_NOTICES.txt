@@ -5,8 +5,9 @@ The macOS arm64 engine's audio analysis uses Essentia, which SpinTools builds
 from source with the libraries below linked statically into one extension
 module. Each library is built from the UNMODIFIED upstream source tarball named
 here (no patches are applied to them); the sha256 is the digest of that tarball,
-and the licence text that follows is quoted verbatim from it. Essentia itself
-carries the SpinTools patches listed under it, published in full below.
+and the licence text that follows is quoted verbatim from it. From engine-v11 on,
+Essentia itself carries the SpinTools patches listed under it, published in
+full below.
 
 FFmpeg is configured decode-only, without --enable-gpl and without any GPL or
 non-free component, and its configure step reports the licence as
@@ -26,9 +27,11 @@ their own licences, as before.
 Essentia
   version : 2.1-beta6-dev (MTG/essentia commit 86bdb8e3244bbaa3cf1fb600495d330b6e5530eb)
   licence : AGPL-3.0-only (Music Technology Group, Universitat Pompeu Fabra)
-  source  : https://github.com/MTG/essentia  (the commit above, MODIFIED by
-            the patch(es) below, applied in this order; their full text is
-            under "MODIFICATIONS TO ESSENTIA" in this file)
+  source  : https://github.com/MTG/essentia  (the commit above. From
+            engine-v11 on it is MODIFIED by the patch(es) below,
+            applied in this order; their full text is under "MODIFICATIONS
+            TO ESSENTIA" in this file. engine-v9 and engine-v10 used the
+            commit unmodified.)
             - 0001-audioloader-unref-skipped-packets.patch  (sha256 f0c382d7f6291f69be523afeaa5f6b3df942d77a0cfe66fdc9eefca20438df8e)
   site    : https://essentia.upf.edu
 
@@ -76,7 +79,8 @@ Eigen
 
 
 ==============================================================================
-MODIFICATIONS TO ESSENTIA (verbatim patches, applied with `git apply`)
+MODIFICATIONS TO ESSENTIA (engine-v11 on; verbatim patches,
+applied with `git apply`)
 ==============================================================================
 
 ------------------------------------------------------------------------------
